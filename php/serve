@@ -1,0 +1,154 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+# Color variables for styling
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Clear screen
+clear
+sleep 1
+
+# Display ASCII Art with developer credits
+echo -e "${BLUE}
+▗▄▄▖ ▐▌▗▞▀▜▌▄▄▄▄     ■   ▄▄▄  ▄▄▄▄  ▗▄▄▖ ▗▖ ▗▖▗▄▄▖ 
+▐▌ ▐▌▐▌▝▚▄▟▌█   █ ▗▄▟▙▄▖█   █ █ █ █ ▐▌ ▐▌▐▌ ▐▌▐▌ ▐▌
+▐▛▀▘ ▐▛▀▚▖  █   █   ▐▌  ▀▄▄▄▀ █   █ ▐▛▀▘ ▐▛▀▜▌▐▛▀▘ 
+▐▌   ▐▌ ▐▌          ▐▌              ▐▌   ▐▌ ▐▌▐▌   
+                    ▐▌                             
+                                                   
+${GREEN}Made by Uthman Dev${NC}"
+
+# Default values for server configuration
+port=8000
+directory=$(pwd)
+ssh_output_file="ssh_output.txt" 
+
+# Function to show help message
+show_help() {
+    echo -e "${BLUE}PhantomPHP Server - Command Line Options:${NC}"
+    echo "-------------------------------------"
+    echo -e "  -h           Show this help message"
+    echo -e "  -p <port>    Specify a port number (default is 8000)"
+    echo -e "  -d <dir>     Specify a directory to serve (default is current directory)"
+    echo -e "  -g           Open the GitHub repository"
+    echo -e "  -f           Forward Local Server"
+    echo "-------------------------------------"
+}
+
+# Function for port forwarding
+port_frowarding() {
+    echo -e "${YELLOW}Establishing SSH tunnel for PhantomPHP Server...${NC}"
+
+    ssh_output_file="$HOME/bin/ssh_output.txt"
+
+    if [ ! -f "$ssh_output_file" ]; then
+        touch "$ssh_output_file"
+    fi
+
+    ssh_command="ssh -R 80:localhost:$port serveo.net > $ssh_output_file 2>&1 &"
+    eval $ssh_command
+    sleep 2
+
+    tunnel_url=""
+    while [ -z "$tunnel_url" ]; do
+        if [ -f "$ssh_output_file" ]; then
+            tunnel_url=$(grep -o "https://[^\s]*" "$ssh_output_file")
+            if [ ! -z "$tunnel_url" ]; then
+                echo -e "${GREEN}Tunnel URL: $tunnel_url${NC}"
+                break
+            fi
+        fi
+        sleep 1
+    done
+
+    if [ -z "$tunnel_url" ]; then
+        echo -e "${RED}Failed to establish SSH tunnel. Check ssh_output.txt for details.${NC}"
+        echo -e "${YELLOW}SSH Output Log:${NC}"
+        cat "$ssh_output_file"
+    else
+        echo -e "${GREEN}SSH tunnel established successfully!${NC}"
+    fi
+}
+
+#command-line arguments
+while getopts ":hp:d:gf" option; do
+    case "$option" in
+        h)
+            show_help
+            exit 0
+            ;;
+        p)
+            port=$OPTARG
+            ;;
+        d)
+            directory=$OPTARG
+            ;;
+        g)
+            echo -e "${GREEN}Opening GitHub Repository...${NC}"
+            xdg-open "https://github.com/codetesla51/harvester-" &> /dev/null
+            exit 0
+            ;;
+        f)
+            port_frowarding
+            exit 0
+            ;;
+        \?)
+            echo -e "${RED}Error: Invalid option -${OPTARG}${NC}"
+            show_help
+            exit 1
+            ;;
+        :)
+            echo -e "${RED}Error: Option -${OPTARG} requires an argument${NC}"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Function to display server information
+display_server_info() {
+    printf "\n\n" 
+    echo -e "${YELLOW}Starting PhantomPHP Server...${NC}"
+    printf "\n"
+    echo -e "${GREEN}Serving PHP app at http://localhost:$port${NC}"
+    printf "\n"
+    echo -e "${BLUE}Serving files from: $directory${NC}"
+    printf "\n"
+}
+
+# Function to check for index file in the directory
+check_index_file() {
+    if [ ! -f "$directory/index.php" ] && [ ! -f "$directory/index.html" ]; then
+        printf "\n\n" 
+        echo -e "${YELLOW}Warning: No index file found. Enter Local Server With Host / File Name${NC}"
+        printf "\n"
+        echo -e "${BLUE}PhantomPHP Server - Working Directory${NC}"
+        echo "--------------------------------------------------"
+        ls "$directory"
+        echo "--------------------------------------------------"
+    else
+        printf "\n\n"
+        echo -e "${GREEN}Index file found. Access your app at http://localhost:$port${NC}"
+        printf "\n"
+        echo -e "${BLUE}PhantomPHP Server - Working Directory${NC}"
+        echo "--------------------------------------------------"
+        ls "$directory"
+        echo "--------------------------------------------------"
+    fi
+}
+
+# Display server info
+display_server_info
+
+# Start PHP server
+php -S localhost:$port -t "$directory" &
+sleep 1
+
+# Check for index file
+check_index_file
+
+# Keep script running in the background
+wait

@@ -1,6 +1,6 @@
 {
 	"id": "acode.plugin.phantom-php",
-	"name": "Plugin",
+	"name": "PhantomPHP",
 	"main": "dist/main.js",
 	"version": "1.0.0",
 	"readme": "readme.md",

@@ -1,0 +1,17 @@
+{
+	"id": "acode.plugin.phantom-php",
+	"name": "PhantomPHP",
+	"main": "dist/main.js",
+	"version": "1.0.0",
+	"readme": "./plugin.md",
+	"icon": "icon.png",
+	"files": [],
+	"minVersionCode": 290,
+	"price": 0,
+	"author": {
+		"name": "dconco",
+		"email": "info@dconco.dev",
+		"github": "https://github.com/dconco",
+		"website": "https://dconco.dev"
+	}
+}

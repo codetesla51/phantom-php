@@ -1,0 +1,779 @@
+#!/bin/bash
+# ================================================
+#                 PhantomPHP Server Script
+# ================================================
+#
+# Description:
+# This script sets up and serves a PHP application using PHP's built-in server.
+# It provides various command-line options to customize server behavior, including
+# selecting the port, specifying the directory, and enabling SSH port forwarding.
+# The script also handles custom error pages, creates an index file if none exists,
+# allows for running specific PHP files, and opens the GitHub repository for the project.
+#
+# Features:
+# - Customizable port and directory for the PHP server.
+# - SSH tunneling for port forwarding using Serveo.
+# - Automatic creation of a custom error page if no index file is found.
+# - Ability to run specific PHP files directly.
+# - Option to start MySQL and phpMyAdmin.
+#
+# Author: Uthman Dev
+# GitHub: https://github.com/codetesla51/phantom-php
+# License: MIT
+# Portfolio: https://uthmandev.vercel.app
+# 
+# Let's build more projects together! This project is under the MIT license.
+# Contributions are welcome.
+# ================================================
+
+# ---------------------------- Phantom PHP Server - Code Map ----------------------------
+#
+# Color Variables
+#   - Define color variables to use for console output styling throughout the script.
+#     - `NC`: Resets the color to default (used to end colored text).
+#     - `RED`: Used for error and warning messages to alert the user.
+#     - `GREEN`: Used for success messages to confirm actions completed.
+#     - `YELLOW`: Used for informational messages or process updates.
+#     - `BLUE`: For additional informational messages or secondary data.
+#
+# Script Variables
+#   - Set up primary variables for controlling the behavior of the script.
+#     - `directory`: Defines the directory where the PHP server will run (defaults to current directory).
+#     - `port`: Sets the default port for the PHP server to start on (e.g., 8000).
+#     - `show_logo`: Sets a default database name when interacting with MySQL.
+#     - `ssh_output_file`: Configures the delay (in seconds) used by the loader animation for a smoother experience.
+#
+# Helper Functions
+#   - General utility functions to improve the usability of the script.
+#
+#   show_loader
+#     - Function to show a loading animation while certain operations are in progress.
+#     - Provides visual feedback to the user, especially helpful for long-running tasks.
+#
+#   show_help
+#     - Displays the available commands, options, and flags for the script.
+#     - Lists and explains each feature, its usage syntax, and purpose.
+#     - Includes descriptions for key flags like `-p` for port and `-d` for directory.
+#
+# phpMyAdmin Setup installation
+#     -mariadb and phpMyAdmin installation
+
+# Port Forwarding Function
+#   - port_forwarding
+#     - Sets up port forwarding to redirect traffic from one port to another.
+#     - Example usage: Forwarding from default port `8000` to another port like `3000`.
+#     - Useful for cases where the default port is unavailable or for connecting to other services.
+#
+# File Management Functions
+#   - Functions to manage files within the target directory, particularly for creating index files.
+#
+#   create_index_file
+#     - Creates a default `index.php` or `index.html` file in the specified directory.
+#     - This file lists the files and folders dynamically within the directory.
+#     - It provides a custom "dashboard" style page if an index file isn’t present, helping to start development.
+#
+# Server Function
+#   - serve
+#     - Starts a PHP development server in the specified directory on the designated port.
+#     - Checks if the server is already running and provides feedback.
+#     - Ensures only one instance runs at a time for the specified configuration.
+#
+# MySQL Management Functions
+#   - Functions to initialize and manage a MySQL server instance if needed.
+#
+#   mysql_db
+#     - Starts the MySQL server if it isn’t already running.
+#     - Automatically connects to a default or user-specified database (`db_name`).
+#     - Useful for projects requiring a database connection, allowing quick start-up.
+#
+# Script Execution Functions
+#   - Functions dedicated to executing and managing custom PHP scripts.
+#
+#   run_script
+#     - Executes PHP scripts located in the specified directory.
+#     - Displays output and handles any errors that occur during execution.
+#     - Allows running custom logic directly from the CLI in the specified project directory.
+#
+# Flag Handling
+#   - Manage the command-line flags for the script to control behavior and options.
+#     - `-p [port]`: Allows the user to specify a custom port number for the server.
+#     - `-d [directory]`: Specifies a custom directory in which the server should run.
+#     - `-D`: Activates MySQL functionality, including database checks and connections.
+#     - `-h`: Triggers the help menu, showing available commands and usage examples.
+#
+# ---------------------------------------------------------------------------------------
+
+
+
+
+RED='\033[1;91m'
+GREEN='\033[1;92m'
+YELLOW='\033[1;93m'
+BLUE='\033[1;94m'
+NC='\033[0m' 
+sleep 1
+show_loader() {
+    local delay=0.1  
+    local spin='/-\|' 
+    local i=0
+    while kill -0 "$1" 2>/dev/null; do
+        printf "\r${spin:i++%${#spin}:1}"
+        sleep $delay
+    done
+    printf "\r"  
+}
+
+(sleep 1) & 
+dummy_pid=$!
+show_loader "$dummy_pid"
+wait "$dummy_pid" 
+
+
+show_logo=true
+phpmyadmin=false
+install=false
+port=8000
+directory=$(pwd)
+ssh_output_file="$HOME/PhantomPHP_ssh_output.txt"
+server_log="$HOME/bin/PhantomPHP_server_log.txt"
+
+
+validate_port() {
+    if ! [[ "$port" =~ ^[0-9]+$ ]] || [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
+        echo -e "${RED}Invalid port number. Please specify a port between 1 and 65535.${NC}"
+        exit 1
+    fi
+    
+}
+#check port function does not work ,lets just comment it
+#Check_por(){
+ # while lsof -i :$port &> /dev/null; do
+  #      echo -e "${YELLOW}Port $port is already in use. Trying port $((port + 1))...${NC}"
+  #      port=$((port + 1))
+        
+        # Exit if the port exceeds 65535
+ #       if [ "$port" -gt 65535 ]; then
+         #   echo -e "${RED}No available ports found below 65535.${NC}"
+    #        exit 1
+  #      fi
+  #  done
+
+  #  echo -e "${GREEN}Using port $port${NC}"
+#}
+
+# a function to phpmyadmin  setup
+initialize() {
+    echo -e "\n"
+    echo -e "${GREEN}Starting phpMyAdmin server...${NC}"
+xxxx3    cd || exit
+
+    mysql_install_db &> /dev/null
+    mariadbd-safe -u root &> /dev/null &
+
+    if cd ../usr/share/phpmyadmin &> /dev/null; then
+        echo -e "${GREEN}Navigated to phpMyAdmin directory${NC}"
+    else
+        echo -e "${RED}phpMyAdmin directory not found!${NC}"
+        return 1
+    fi
+
+    if [ -f "config.inc.php" ]; then
+        echo -e "${YELLOW}config.inc.php file found. Removing old file...${NC}"
+        rm config.inc.php &> /dev/null
+    else
+        echo -e "${YELLOW}No config file found. Creating a new one...${NC}"
+    fi
+
+    echo -e "${BLUE}Creating config.inc.php file...${NC}"
+    
+    cat <<EOF > config.inc.php &> /dev/null
+<?php
+/**
+ * phpMyAdmin sample configuration, you can use it as base for
+ * manual configuration. For easier setup you can use setup/
+ *
+ * All directives are explained in documentation in the doc/ folder
+ * or at <https://docs.phpmyadmin.net/>.
+ */
+
+declare(strict_types=1);
+
+/**
+ * This is needed for cookie-based authentication to encrypt the cookie.
+ * Needs to be a 32-bytes long string of random bytes. See FAQ 2.10.
+ */
+\$cfg['blowfish_secret'] = 'YOUR_RANDOM_32_BYTE_STRING_HERE'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */
+
+/**
+ * Servers configuration
+ */
+\$i = 0;
+
+/**
+ * First server
+ */
+\$i++;
+/* Authentication type */
+\$cfg['Servers'][\$i]['auth_type'] = 'cookie';
+/* Server parameters */
+\$cfg['Servers'][\$i]['host'] = '127.0.0.1';
+\$cfg['Servers'][\$i]['compress'] = false;
+\$cfg['Servers'][\$i]['AllowNoPassword'] = true;
+
+/**
+ * phpMyAdmin configuration storage settings.
+ */
+
+/* User used to manipulate with storage */
+// \$cfg['Servers'][\$i]['controlhost'] = '';
+// \$cfg['Servers'][\$i]['controlport'] = '';
+// \$cfg['Servers'][\$i]['controluser'] = 'pma';
+// \$cfg['Servers'][\$i]['controlpass'] = 'pmapass';
+
+/* Storage database and tables */
+// \$cfg['Servers'][\$i]['pmadb'] = 'phpmyadmin';
+// \$cfg['Servers'][\$i]['bookmarktable'] = 'pma__bookmark';
+// \$cfg['Servers'][\$i]['relation'] = 'pma__relation';
+// \$cfg['Servers'][\$i]['table_info'] = 'pma__table_info';
+// \$cfg['Servers'][\$i]['table_coords'] = 'pma__table_coords';
+// \$cfg['Servers'][\$i]['pdf_pages'] = 'pma__pdf_pages';
+// \$cfg['Servers'][\$i]['column_info'] = 'pma__column_info';
+// \$cfg['Servers'][\$i]['history'] = 'pma__history';
+// \$cfg['Servers'][\$i]['table_uiprefs'] = 'pma__table_uiprefs';
+// \$cfg['Servers'][\$i]['tracking'] = 'pma__tracking';
+// \$cfg['Servers'][\$i]['userconfig'] = 'pma__userconfig';
+// \$cfg['Servers'][\$i]['recent'] = 'pma__recent';
+// \$cfg['Servers'][\$i]['favorite'] = 'pma__favorite';
+// \$cfg['Servers'][\$i]['users'] = 'pma__users';
+// \$cfg['Servers'][\$i]['usergroups'] = 'pma__usergroups';
+// \$cfg['Servers'][\$i]['navigationhiding'] = 'pma__navigationhiding';
+// \$cfg['Servers'][\$i]['savedsearches'] = 'pma__savedsearches';
+// \$cfg['Servers'][\$i]['central_columns'] = 'pma__central_columns';
+// \$cfg['Servers'][\$i]['designer_settings'] = 'pma__designer_settings';
+// \$cfg['Servers'][\$i]['export_templates'] = 'pma__export_templates';
+
+/**
+ * End of servers configuration
+ */
+
+/**
+ * Directories for saving/loading files from server
+ */
+\$cfg['UploadDir'] = '';
+\$cfg['SaveDir'] = '';
+
+EOF
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}phpMyAdmin setup completed!${NC}"
+    else
+        echo -e "${RED}Failed to create config.inc.php file.${NC}"
+    fi
+}
+
+
+#port port_frowarding function for forwarding local host 🤦
+#we used serveo
+port_frowarding(){
+    echo -e "${YELLOW}Establishing SSH tunnel for PhantomPHP Server...${NC}"
+    show_loader
+
+    # Define SSH output file path
+    ssh_output_file="$HOME/bin/ssh_output.txt"
+
+    # Ensure the output file exists
+    if [ ! -f "$ssh_output_file" ]; then
+        touch "$ssh_output_file"
+    fi
+
+    # Start SSH tunnel with remote forwarding and redirect output
+    ssh_command="ssh -R 80:localhost:$port serveo.net > $ssh_output_file 2>&1 &"
+    eval $ssh_command
+    sleep 2
+
+    # Extract the tunnel URL
+    tunnel_url=""
+    while [ -z "$tunnel_url" ]; do
+        if [ -f "$ssh_output_file" ]; then
+            tunnel_url=$(grep -o "https://[^\s]*serveo.net" "$ssh_output_file")
+            if [ ! -z "$tunnel_url" ]; then
+                echo -e "${GREEN}Tunnel URL: $tunnel_url${NC}"
+                break
+            fi
+        fi
+        sleep 1
+    done
+
+    # Check if tunnel URL was found
+    if [ -z "$tunnel_url" ]; then
+        echo -e "${RED}Failed to establish SSH tunnel. Check ssh_output.txt for details.${NC}"
+        echo -e "${YELLOW}SSH Output Log:${NC}"
+        cat "$ssh_output_file"
+    else
+        echo -e "${GREEN}SSH tunnel established successfully!${NC}"
+    fi
+}
+#this function checks if there's an index file working directory if not creat
+#dashboard 
+create_index_file() {
+    index_file_path="$directory/index.php"
+
+    if [ -f "$index_file_path" ] || [ -f "$directory/index.html" ]; then
+        return 1
+    else
+        echo -e "${YELLOW}Creating  index.php in $directory as no index.php or index.html was found.${NC}"
+
+        cat << 'EOF' > "$directory/index.php"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom PHP Server </title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        nav {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #1a1a1a;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        nav .nav-logo {
+            display: flex;
+            align-items: center;
+            color: #39FF14;
+            font-size: 24px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        nav .nav-logo img {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .github-button {
+            background-color: #39FF14;
+            border: none;
+            color: #121212;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        main {
+            margin-top: 80px;
+            text-align: center;
+            z-index: 5;
+            width: 100%;
+        }
+
+        .main-heading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #39FF14;
+            margin: 20px 0;
+        }
+
+        h2 {
+            font-size: 36px;
+            color: #39FF14;
+            margin: 20px 0;
+        }
+
+        p {
+            font-size: 18px;
+            margin: 10px 0 20px;
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            background-color: #1e1e1e;
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            color: #b0b0b0;
+            font-size: 16px;
+            border-bottom: 1px solid #333;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item i {
+            color: #39FF14;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: #39FF14;
+            border: none;
+            color: #121212;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .btn-delete {
+            background-color: #ff3b3b;
+        }
+
+        footer {
+            margin-top: 40px;
+            font-size: 14px;
+            color: #7a7a7a;
+            text-align: center;
+        }
+
+        footer a {
+            color: #39FF14;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .file-upload-form {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-upload-form input[type="file"] {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#" class="nav-logo">
+            Phantom PHP Server
+        </a>
+        <a href="https://github.com/codetesla51/phantom-php" class="github-button">GitHub Repo</a>
+    </nav>
+
+    <main>
+        <div class="main-heading">
+            <h2>Phantom PHP Server </h2>
+        </div>
+        <p>We didn't find an index file at all during serving. We are using a temporary one with this. You can edit your files in the working directory, delete, or add new files. Delete this code from this page to start development.</p>
+
+        <form class="file-upload-form" action="" method="POST" enctype="multipart/form-data">
+            <input type="file" name="fileToUpload" required>
+            <button class="btn" type="submit" name="upload">Upload File</button>
+        </form>
+
+        <div class="file-list">
+            <?php
+                $directory = __DIR__;
+                $files = array_diff(scandir($directory), array('.', '..', 'index.php'));
+
+                // Handle file upload
+                if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload'])) {
+                    if (isset($_FILES['fileToUpload']) && $_FILES['fileToUpload']['error'] === UPLOAD_ERR_OK) {
+                        $targetFile = $directory . '/' . basename($_FILES['fileToUpload']['name']);
+                        if (move_uploaded_file($_FILES['fileToUpload']['tmp_name'], $targetFile)) {
+                            echo "<script>alert('File uploaded successfully!'); window.location.href=window.location.href;</script>";
+                        } else {
+                            echo "<script>alert('Failed to upload file.');</script>";
+                        }
+                    } else {
+                        echo "<script>alert('No file selected or upload error.');</script>";
+                    }
+                }
+
+                // Handle file deletion
+                if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete']) && isset($_POST['filename'])) {
+                    $fileToDelete = $directory . '/' . $_POST['filename'];
+                    if (file_exists($fileToDelete)) {
+                        if (unlink($fileToDelete)) {
+                            echo "<script>alert('File deleted successfully!'); window.location.href=window.location.href;</script>";
+                        } else {
+                            echo "<script>alert('Failed to delete file.');</script>";
+                        }
+                    } else {
+                        echo "<script>alert('File not found.');</script>";
+                    }
+                }
+
+                // List files with delete option
+                foreach ($files as $file) {
+                    echo "<div class='file-item'>
+                            <i class='fas fa-file'></i> " . htmlspecialchars($file) . 
+                            "<div class='file-actions'>
+                                <form action='' method='POST' style='display:inline;'>
+                                    <input type='hidden' name='filename' value='".htmlspecialchars($file)."'>
+                                    <button type='submit' name='delete' class='btn btn-delete'>Delete</button>
+                                </form>
+                            </div>
+                          </div>";
+                }
+            ?>
+        </div>
+    </main>
+
+    <footer>
+        <p>Phantom PHP Server made by <a href="https://github.com/codetesla51">Uthman Dev</a></p>
+    </footer>
+</body>
+</html>
+
+            
+EOF
+
+        echo -e "${GREEN} index.php created successfully in $directory${NC}"
+    fi
+}
+#run php files function 
+script_run() {
+    file="$1.php"
+             echo -e "\n"
+    echo -e "${BLUE} attempting to run $file"
+             echo -e "\n"
+
+    show_loader
+    if [ -f "$file" ]; then
+        php "$file"
+    else
+         echo -e "\n"
+        echo -e "${RED}File $file not found.${NC}"
+        exit 1
+    fi
+}
+show_help() {
+    echo -e "${CYAN}==============================================${NC}"
+    echo -e "${MAGENTA}               ${GREEN}Usage Guide${NC}              ${MAGENTA}"
+    echo -e "${CYAN}==============================================${NC}"
+    echo ""
+    echo -e "${BLUE}Command:${NC} ${CYAN}serve [options]${NC}"
+    echo ""
+    echo -e "${YELLOW}Options:${NC}"
+    echo -e "  ${GREEN}-h${NC}                  ${YELLOW}Display help and usage information.${NC}"
+    echo -e "  ${GREEN}-p ${YELLOW}port${NC}          ${YELLOW}Specify the port number (e.g., ${GREEN}-p 8080${YELLOW}).${NC}"
+    echo -e "  ${GREEN}-d ${YELLOW}directory${NC}     ${YELLOW}Specify the working directory (e.g., ${GREEN}-d /path/to/dir${YELLOW}).${NC}"
+    echo -e "  ${GREEN}-g${NC}                  ${YELLOW}Open the GitHub Repository in the browser.${NC}"
+    echo -e "  ${GREEN}-f${NC}                  ${YELLOW}Enable forwarding mode.${NC}"
+    echo -e "  ${GREEN}-R ${YELLOW}file${NC}         ${YELLOW}Run a specific PHP file (e.g., ${GREEN}-R script.php${YELLOW}).${NC}"
+    echo ""
+    echo -e "${CYAN}Examples:${NC}"
+    echo -e "  ${GREEN}serve -h${NC}                  ${YELLOW}Display the help information.${NC}"
+    echo -e "  ${GREEN}serve -p 8080${NC}             ${YELLOW}Set the port to 8080.${NC}"
+    echo -e "  ${GREEN}serve -d /path/to/dir${NC}     ${YELLOW}Set the working directory.${NC}"
+    echo -e "  ${GREEN}serve -g${NC}                  ${YELLOW}Open GitHub Repository.${NC}"
+    echo -e "  ${GREEN}serve -R script.php${NC}       ${YELLOW}Run the script.php PHP file.${NC}"
+    echo ""
+    echo -e "${CYAN}==============================================${NC}"
+    echo -e "${MAGENTA}               ${GREEN}End of Guide${NC}             ${MAGENTA}"
+    echo -e "${CYAN}==============================================${NC}"
+}
+
+mysql_db() {
+    cd || exit
+
+    if ! cd ../usr/share/phpmyadmin; then
+        echo -e "${RED}Error: /usr/share/phpmyadmin not found${NC}"
+        return 1
+    fi
+    port="${1:-8080}" 
+    echo -e "\n${YELLOW}Attempting to start phpMyAdmin server at http://localhost:$port ${NC}\n"
+    php -S localhost:"$port" &> "$server_log" &
+    server_pid=$!
+    sleep 1
+
+    if ps -p $server_pid > /dev/null; then
+        echo -e "${GREEN}phpMyAdmin server started at http://localhost:$port${NC}"
+    else
+        echo -e "${RED}Failed to start the server on port $port. It may be in use. Try a different port or check server_log.txt for details.${NC}"
+        cat "$server_log"
+    fi
+}
+
+run_server=true
+
+while getopts ":hp:d:R:gifD:" option; do
+    case "$option" in
+        h)
+            show_help
+            exit 0
+            ;;
+            
+        i)   
+            install=true
+            show_logo=true
+            phpmyadmin=false
+            run_server=false 
+           ;;
+        p)
+            port=$OPTARG
+            validate_port
+            ;;
+        f)
+            forward="true"
+            ;;
+        d)
+            directory=$OPTARG
+            if [ ! -d "$directory" ]; then
+                echo -e "${RED}Directory $directory does not exist.${NC}"
+                exit 1
+            fi
+            ;;
+        g) 
+            echo -e "\n"
+            echo -e "${GREEN}Opening GitHub Repository...${NC}"
+            if ! xdg-open "https://github.com/codetesla51/phantom-php" &> /dev/null; then
+                echo -e "${RED}Failed to open GitHub repository.${NC}"
+            fi
+            exit 0
+            ;;
+        R)
+            file=$OPTARG
+            script_run "$file"
+            exit 0
+            ;;
+        D) 
+            port=$OPTARG
+            validate_port
+            phpmyadmin=true
+            run_server=false 
+            show_logo=false
+            ;;
+        \?)
+            echo -e "${RED}Error: Invalid option -${OPTARG}${NC}"
+            show_help
+            exit 1
+            ;;
+        :)
+            echo -e "${RED}Error: Option -${OPTARG} requires an argument${NC}"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+if [ "$show_logo" = true ]; then
+    clear
+    sleep 1
+    echo -e "${GREEN}
+           ▄▄▄▄▄▄▄▄▄▄▄▄
+        ▄█▀▀▀▀▀▀▀▀▀▀▀▀▀█▄
+      ▄█▀     ▄▄▄▄▄▄     ▀█▄
+     ██     ██████████     ██
+    ██      ██████████      ██
+     ██     ██████████     ██
+       ▀█▄    ▀████▀    ▄█▀
+          ▀▀▀▄▄▄▄▄▄▄▀▀▀
+
+         PhantomPHP Server
+      Fast and Reliable.
+
+         Made by Uthman Dev
+    ${NC}"
+    echo -e "\n"
+fi
+
+
+display_server_info() {
+    printf "\n\n"
+    echo -e "${YELLOW}Starting PhantomPHP Server...${NC}"
+    printf "\n"
+    echo -e "${GREEN}Serving PHP app at http://localhost:$port${NC}"
+    printf "\n"
+    echo -e "${BLUE}Opening in device Browser${NC}"
+    printf "\n"
+    echo -e "${BLUE}Serving files from: $directory${NC}"
+    printf "\n"
+}
+
+serve(){
+    validate_port
+    display_server_info
+    create_index_file
+    
+    echo -e "\n${YELLOW}Attempting to start PHP server at http://localhost:$port ${NC}\n"
+    php -S localhost:$port -t "$directory" &> $server_log &
+    server_pid=$!
+    
+    sleep 1
+    if ps -p $server_pid > /dev/null; then
+        echo -e "${GREEN}PHP server started at http://localhost:$port${NC}"
+    else
+        echo -e "${RED}Failed to start the server on port $port. It may be in use. Try a different port or check server_log.txt for details.${NC}"
+       cat "$server_log"
+
+    fi
+}
+if [ "$run_server" = true ]; then
+    serve
+
+    if ps -p $server_pid > /dev/null; then
+        if command -v xdg-open &> /dev/null; then
+            xdg-open "http://localhost:$port"
+        elif command -v termux-open &> /dev/null; then
+            termux-open "http://localhost:$port"
+        else
+            echo -e "${RED}Error: No compatible browser open command found.${NC}"
+        fi
+    
+    fi
+fi
+
+if [ "$phpmyadmin" = "true" ]; then
+    mysql_db
+  elif [ "$forward" = "true" ]; then
+    port_frowarding
+  elif [ "$install" = "true" ]; then
+    initialize
+fi
+
+wait

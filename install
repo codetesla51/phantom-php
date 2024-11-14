@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # Function for automatic Phantom-PHP installation
 
 # Color Variables
@@ -118,55 +118,47 @@ phantomPhpInstall() {
   show_loader
     sleep 1
 
-    log "${BLUE}" "Initializing 'phantom' command...\n"
+    log "${BLUE}" "Initializing 'serve' command...\n"
     sleep 2
-   if [[ -f "phantom" ]]; then
-    log "${YELLOW}" "Checking if ~/bin exists..."
-    
-    # Create ~/bin if it does not exist
-    if [[ ! -d "$HOME/bin" ]]; then
-        log "${YELLOW}" "~/bin does not exist. Creating it..."
-        mkdir -p "$HOME/bin"
-    fi
+   if [[ -f "serve" ]]; then
+        log "${YELLOW}" "Moving 'serve' file to ~/bin/..."
+        mv serve ~/bin/
 
-    log "${YELLOW}" "Moving 'phantom' file to ~/bin/..."
-    mv phantom ~/bin/
+        if [[ -f ~/bin/serve ]]; then
+            if [[ ! -x ~/bin/serve ]]; then
+                log "${YELLOW}" "Making 'serve' executable..."
+                chmod +x ~/bin/serve
 
-    if [[ -f ~/bin/phantom ]]; then
-        if [[ ! -x ~/bin/phantom ]]; then
-            log "${YELLOW}" "Making 'phantom' executable..."
-            chmod +x ~/bin/phantom
-
-            if [[ -x ~/bin/phantom ]]; then
-                log "${GREEN}" "'phantom' file is now executable."
+                if [[ -x ~/bin/serve ]]; then
+                    log "${GREEN}" "'Serve' file is now executable."
+                else
+                    log "${RED}" "Error: Failed to set executable permissions on 'serve'."
+                    return
+                fi
             else
-                log "${RED}" "Error: Failed to set executable permissions on 'phantom'."
-                return
+                log "${GREEN}" "'Serve' file is already executable."
+            fi
+
+            if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc; then
+                echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+                log "${YELLOW}" "Updating PATH in ~/.bashrc..."
+            fi
+
+            log "${YELLOW}" "Sourcing ~/.bashrc..."
+            source ~/.bashrc
+            log "${GREEN}" "'Serve' command setup done. Phantom-PHP installed successfully.\n"
+
+            if serve -i; then
+                log "${GREEN}" "'serve' command is now running."
+            else
+                log "${RED}" "Failed to run 'serve' command."
             fi
         else
-            log "${GREEN}" "'phantom' file is already executable."
-        fi
-
-        if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc; then
-            echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
-            log "${YELLOW}" "Updating PATH in ~/.bashrc..."
-        fi
-
-        log "${YELLOW}" "Sourcing ~/.bashrc..."
-        source ~/.bashrc
-        log "${GREEN}" "'Phantom' command setup done. Phantom-PHP installed successfully.\n"
-
-        if phantom -i; then
-            log "${GREEN}" "'phantom' command is now running."
-        else
-            log "${RED}" "Failed to run 'phantom' command."
+            log "${RED}" "Error: Failed to move 'serve' to ~/bin/."
         fi
     else
-        log "${RED}" "Error: Failed to move 'phantom' to ~/bin/."
+        log "${RED}" "Error: 'serve' file not found. Please clone the repository again."
     fi
-else
-    log "${RED}" "Error: 'phantom' file not found. Please clone the repository again."
-fi
 
 }
 

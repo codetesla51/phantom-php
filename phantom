@@ -110,7 +110,10 @@ RED='\033[1;91m'
 GREEN='\033[1;92m'
 YELLOW='\033[1;93m'
 BLUE='\033[1;94m'
-NC='\033[0m' 
+CYAN='\033[1;96m'    
+MAGENTA='\033[1;95m' 
+NC='\033[0m'         # No color (reset)
+
 sleep 1
 show_loader() {
     local delay=0.2
@@ -138,7 +141,6 @@ log() {
 show_logo=true
 phpmyadmin=false
 install=false
-showversion=false
 port=8000
 directory=$(pwd)
 ssh_output_file="$HOME/PhantomPHP_ssh_output.txt"
@@ -798,7 +800,7 @@ echo -e "${YELLOW}-----------------------------------------${NC}"
            install=false
 
       ;;
-    -d | --dir
+    -d | --dir)
       shift
       directory=$1
       if [ ! -d "$directory" ]; then

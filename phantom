@@ -113,20 +113,26 @@ BLUE='\033[1;94m'
 NC='\033[0m' 
 sleep 1
 show_loader() {
-    local delay=0.1  
-    local spin='/-\|' 
+    local delay=0.2
+    local spin='/-\|'
     local i=0
     while kill -0 "$1" 2>/dev/null; do
-        printf "\r${spin:i++%${#spin}:1}"
+        printf "\r${spin:i++%${#spin}:1} Loading..."
         sleep $delay
     done
-    printf "\r"  
+    printf "\r"  # Clear the loader
 }
 
-(sleep 1) & 
+(sleep 2) & 
 dummy_pid=$!
 show_loader "$dummy_pid"
 wait "$dummy_pid" 
+
+log() {
+    local color="$1"
+    shift
+    echo -e "${color}$*${NC}"
+}
 
 
 show_logo=true
@@ -161,8 +167,8 @@ validate_port() {
   #  echo -e "${GREEN}Using port $port${NC}"
 #}
 
-initialize() {
-   bash install
+install_server() {
+   
     echo -e "\n"
     echo -e "${GREEN}Starting phpMyAdmin server...${NC}"
     cd || exit
@@ -271,6 +277,131 @@ EOF
     fi
 }
 
+phantomPhpInstall() {
+    show_loader
+     clear
+    sleep 1
+    echo -e "${GREEN}
+           ▄▄▄▄▄▄▄▄▄▄▄▄
+        ▄█▀▀▀▀▀▀▀▀▀▀▀▀▀█▄
+      ▄█▀     ▄▄▄▄▄▄     ▀█▄
+     ██     ██████████     ██
+    ██      ██████████      ██
+     ██     ██████████     ██
+       ▀█▄    ▀████▀    ▄█▀
+          ▀▀▀▄▄▄▄▄▄▄▀▀▀
+
+         PhantomPHP Server
+      Fast and Reliable.
+
+         Made by Uthman Dev
+    ${NC}"
+    echo -e "\n"
+    log "${BLUE}" "Checking Dependencies..."
+    sleep 2
+
+    log "${BLUE}" "\nChecking if PHP is installed..."
+        sleep 1
+
+    if command -v php >/dev/null 2>&1; then
+        log "${GREEN}" "PHP is installed\n"
+    else
+        log "${RED}" "PHP is not installed"
+        read -p "Do you want to install PHP? (y/n): " choice
+        if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+            log "${YELLOW}" "Installing PHP..."
+            pkg install php -y 
+            until command -v php >/dev/null 2>&1; do
+                sleep 2 
+            done
+            log "${GREEN}" "PHP installed successfully!\n"
+        fi
+    fi
+    sleep 2
+
+    log "${BLUE}" "Checking if MySQL is installed..."
+        sleep 1
+
+    if command -v mysql >/dev/null 2>&1; then
+        log "${GREEN}" "MySQL is installed\n"
+    else
+        log "${RED}" "MySQL is not installed"
+        read -p "Do you want to install MySQL? (y/n): " choice
+        if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+            log "${YELLOW}" "Installing MySQL..."
+            pkg install phpmyadmin 
+            until command -v mysql >/dev/null 2>&1; do
+                sleep 2
+            done
+            log "${GREEN}" "MySQL installed successfully!\n"
+        fi
+    fi
+    sleep 2
+
+    log "${BLUE}" "Checking if MariaDB is installed..."
+        sleep 1
+
+    if command -v mariadb >/dev/null 2>&1; then
+        log "${GREEN}" "MariaDB is installed\n"
+    else
+        log "${RED}" "MariaDB is not installed"
+        read -p "Do you want to install MariaDB? (y/n): " choice
+        if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+            log "${YELLOW}" "Installing MariaDB..."
+            pkg install mariadb -y 
+            until command -v mariadb >/dev/null 2>&1; do
+                sleep 2
+            done
+            log "${GREEN}" "MariaDB installed successfully!\n"
+        fi
+    fi
+
+    log "${GREEN}" "Everything is installed. All set for Phantom-PHP!\n"
+    sleep 1
+
+    log "${YELLOW}" "Installing Phantom-PHP...\n"
+  show_loader
+    sleep 1
+
+    log "${BLUE}" "Initializing 'serve' command...\n"
+    sleep 2
+   if [[ -f "phantom" ]]; then
+    log "${YELLOW}" "Moving 'phantom' file to ~/bin/..."
+    mv phantom ~/bin/
+
+    if [[ -f ~/bin/phantom ]]; then
+        if [[ ! -x ~/bin/phantom ]]; then
+            log "${YELLOW}" "Making 'phantom' executable..."
+            chmod +x ~/bin/phantom
+
+            if [[ -x ~/bin/phantom ]]; then
+                log "${GREEN}" "'phantom' file is now executable."
+            else
+                log "${RED}" "Error: Failed to set executable permissions on 'phantom'."
+                return
+            fi
+        else
+            log "${GREEN}" "'phantom' file is already executable."
+        fi
+
+        if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc; then
+            echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+            log "${YELLOW}" "Updating PATH in ~/.bashrc..."
+        fi
+
+        log "${YELLOW}" "Sourcing ~/.bashrc..."
+        source ~/.bashrc
+        log "${GREEN}" "'phantom' command setup done. Phantom-PHP installed successfully.\n"
+         
+         install_server
+      
+    else
+        log "${RED}" "Error: Failed to move 'phantom' to ~/bin/."
+    fi
+else
+    log "${RED}" "Error: 'phantom' file not found. Please clone the repository again."
+fi
+}
 
 #port port_frowarding function for forwarding local host 🤦
 #we used serveo
@@ -779,7 +910,7 @@ if [ "$phpmyadmin" = "true" ]; then
   elif [ "$forward" = "true" ]; then
     port_frowarding
   elif [ "$install" = "true" ]; then
-    initialize
+    phantomPhpInstall
 fi
 
 wait

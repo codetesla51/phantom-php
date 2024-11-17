@@ -161,8 +161,8 @@ validate_port() {
   #  echo -e "${GREEN}Using port $port${NC}"
 #}
 
-# a function to phpmyadmin  setup
 initialize() {
+   bash install
     echo -e "\n"
     echo -e "${GREEN}Starting phpMyAdmin server...${NC}"
     cd || exit
@@ -641,65 +641,71 @@ mysql_db() {
 
 run_server=true
 
-while getopts ":hp:d:R:gifD:" option; do
-    case "$option" in
-        h)
-            show_help
-            exit 0
-            ;;
-            
-        i)   
-            install=true
-            show_logo=true
-            phpmyadmin=false
-            run_server=false 
-           ;;
-        p)
-            port=$OPTARG
-            validate_port
-            ;;
-        f)
-            forward="true"
-            ;;
-        d)
-            directory=$OPTARG
-            if [ ! -d "$directory" ]; then
-                echo -e "${RED}Directory $directory does not exist.${NC}"
-                exit 1
-            fi
-            ;;
-        g) 
-            echo -e "\n"
-            echo -e "${GREEN}Opening GitHub Repository...${NC}"
-            if ! xdg-open "https://github.com/codetesla51/phantom-php" &> /dev/null; then
-                echo -e "${RED}Failed to open GitHub repository.${NC}"
-            fi
-            exit 0
-            ;;
-        R)
-            file=$OPTARG
-            script_run "$file"
-            exit 0
-            ;;
-        D) 
-            port=$OPTARG
-            validate_port
-            phpmyadmin=true
-            run_server=false 
-            show_logo=false
-            ;;
-        \?)
-            echo -e "${RED}Error: Invalid option -${OPTARG}${NC}"
-            show_help
-            exit 1
-            ;;
-        :)
-            echo -e "${RED}Error: Option -${OPTARG} requires an argument${NC}"
-            show_help
-            exit 1
-            ;;
-    esac
+while [ "$1" != "" ]; do
+  case $1 in
+    -h | --help)
+      show_help
+      exit 0
+      ;;
+    -s | --serve)
+      shift
+      port=$1
+      serve
+      show_logo
+      ;;
+    -i | --install)
+      install=true
+      show_logo=true
+      phpmyadmin=false
+      run_server=false
+      ;;
+    -p | --port)
+      shift
+      port=$1
+      validate_port
+      ;;
+    -f | --forward)
+      forward="true"
+      ;;
+    -d | --directory)
+      shift
+      directory=$1
+      if [ ! -d "$directory" ]; then
+        echo -e "${RED}Directory $directory does not exist.${NC}"
+        exit 1
+      fi
+      ;;
+    -g | --github)
+      echo -e "\n"
+      echo -e "${GREEN}Opening GitHub Repository...${NC}"
+      if ! xdg-open "https://github.com/codetesla51/phantom-php" &> /dev/null; then
+        echo -e "${RED}Failed to open GitHub repository.${NC}"
+      fi
+      exit 0
+      ;;
+    -R | --run)
+      shift
+      file=$1
+      script_run "$file"
+      exit 0
+      ;;
+    -D | --db)
+      shift
+      port=$1
+      validate_port
+      phpmyadmin=true
+      run_server=false 
+      show_logo=false
+      ;;
+    *)
+      echo "Invalid option: $1"
+      show_help
+      exit 1
+      ;;
+  esac
+  shift
 done
+
 
 if [ "$show_logo" = true ]; then
     clear

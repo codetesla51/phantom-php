@@ -920,5 +920,5 @@ if [ "$phpmyadmin" = "true" ]; then
     port_frowarding
   elif [ "$install" = "true" ]; then
     install_server
-
+fi
 wait

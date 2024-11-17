@@ -918,8 +918,5 @@ if [ "$phpmyadmin" = "true" ]; then
     port_frowarding
   elif [ "$install" = "true" ]; then
     install_server
-  elif [ "$showversion" = "true" ]; then
-    Version
-fi
 
 wait

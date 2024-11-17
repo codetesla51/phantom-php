@@ -75,28 +75,28 @@ To install PhantomPHP on your Android device, you’ll need the following prereq
    After running this, everything will be ready and set. You can start building!
 
 4. **Access phpMyAdmin**:
-    - Use the `serve` command to start the PHP server for phpMyAdmin access. Replace `<port>` with the desired port number (e.g., 8080):
+    - Use the `phantom` command to start the PHP server for phpMyAdmin access. Replace `<port>` with the desired port number (e.g., 8080):
 
     ```bash
-    serve -D <port>
+    phantom --db <port>
     ```
 
 Now, you should be able to access phpMyAdmin through your browser by navigating to `http://localhost:<port>`.
 
 
-### Setting Up `serve` Command Globally
+### Setting Up `phantom` Command Globally
 
 If you have already followed the installation steps above, you can skip this section. Otherwise, to enable the `serve` command globally, type these commands. It also checks if dependencies are installed before setting up the `serve` command:
 
 ```bash
 cd phantom-php
-bash install
+phantom --install
 ```
 ### Testing
 To test, navigate to your project directory and run the serve command:
 ```bash
 cd your-project-directory
-serve
+phantom -v 
 ```
 
 #### This will start the PHP at default port 8000 server, and you will be redirected to Chrome (or your default browser). You should see a temporary index.html page displaying the files in the project directory.
@@ -110,7 +110,7 @@ This is the basic way to serve your PHP project. It will run a local server with
 **example:**
 ```bash
 cd your-project-directory
-serve
+phantom --serve
 ```
 ---
 ### Port Selection
@@ -118,7 +118,7 @@ In case the default port 8000 is already in use, you can change the port by usin
 
 **example**
 ```bash
-serve -p 8080
+phantom --serve 8080
 ```
 #### This will run the local server on the selected port.
 ---
@@ -127,7 +127,7 @@ To start both MySQL and phpMyAdmin for database interaction, you can specify a c
 
 **example**
 ```bash
-serve -D 8880
+phantom --D 8880
 ```
 ---
 ### Port Forwarding
@@ -135,7 +135,7 @@ Want to share your work with your team or friends? PhantomPHP allows you to forw
 
 **example**
 ```bash
-serve -p 8080 -f
+phantom -serve 8080 -f
 ```
 #### This will run the local server on port 8080 and forward the port for others to access.
 ---
@@ -145,11 +145,11 @@ To quickly run your PHP file and get immediate output, you can use the following
 
 **Usage Example:**
 ```bash
-serve -R filename
+phantom -run filename
 ```
 #### For instance:
 ```bash
-serve -R init
+phantom --run init
 ```
 #### This will run the init.php file.
 ---
@@ -161,7 +161,7 @@ If you're still having trouble, you can contact the repository owner or contribu
 
 For additional command options, you can view the help menu with:
 ```bash
-serve -h
+phantom -help
 ```
 ---
 ## Contributing

@@ -138,7 +138,7 @@ log() {
 show_logo=true
 phpmyadmin=false
 install=false
-installPhantom=false
+showversion=false
 port=8000
 directory=$(pwd)
 ssh_output_file="$HOME/PhantomPHP_ssh_output.txt"
@@ -236,7 +236,7 @@ install_server() {
   show_loader
     sleep 1
 
-    log "${BLUE}" "Initializing 'serve' command...\n"
+    log "${BLUE}" "Initializing 'phantom' command...\n"
     sleep 2
    if [[ -f "phantom" ]]; then
     log "${YELLOW}" "Moving 'phantom' file to ~/bin/..."
@@ -705,28 +705,28 @@ script_run() {
 }
 show_help() {
     echo -e "${CYAN}==============================================${NC}"
-    echo -e "${MAGENTA}               ${GREEN}Usage Guide${NC}              ${MAGENTA}"
+    echo -e "${MAGENTA}             ${GREEN}Usage Guide${NC}             ${MAGENTA}"
     echo -e "${CYAN}==============================================${NC}"
     echo ""
     echo -e "${BLUE}Command:${NC} ${CYAN}serve [options]${NC}"
     echo ""
     echo -e "${YELLOW}Options:${NC}"
-    echo -e "  ${GREEN}-h${NC}                  ${YELLOW}Display help and usage information.${NC}"
-    echo -e "  ${GREEN}-p ${YELLOW}port${NC}          ${YELLOW}Specify the port number (e.g., ${GREEN}-p 8080${YELLOW}).${NC}"
-    echo -e "  ${GREEN}-d ${YELLOW}directory${NC}     ${YELLOW}Specify the working directory (e.g., ${GREEN}-d /path/to/dir${YELLOW}).${NC}"
-    echo -e "  ${GREEN}-g${NC}                  ${YELLOW}Open the GitHub Repository in the browser.${NC}"
-    echo -e "  ${GREEN}-f${NC}                  ${YELLOW}Enable forwarding mode.${NC}"
-    echo -e "  ${GREEN}-R ${YELLOW}file${NC}         ${YELLOW}Run a specific PHP file (e.g., ${GREEN}-R script.php${YELLOW}).${NC}"
+    echo -e "  ${GREEN}-h | --help${NC}                ${YELLOW}Display help and usage information.${NC}"
+    echo -e "  ${GREEN}-p | --port ${YELLOW}<port>${NC}          ${YELLOW}Specify the port number (e.g., ${GREEN}--port 8080${YELLOW}).${NC}"
+    echo -e "  ${GREEN}-d | --dir ${YELLOW}<directory>${NC}     ${YELLOW}Specify the working directory (e.g., ${GREEN}--dir /path/to/dir${YELLOW}).${NC}"
+    echo -e "  ${GREEN}-g | --github${NC}               ${YELLOW}Open the GitHub repository in your browser.${NC}"
+    echo -e "  ${GREEN}-f | --forward${NC}              ${YELLOW}Enable forwarding mode.${NC}"
+    echo -e "  ${GREEN}-R | --run ${YELLOW}<file>${NC}          ${YELLOW}Run a specific PHP file (e.g., ${GREEN}--run script.php${YELLOW}).${NC}"
     echo ""
     echo -e "${CYAN}Examples:${NC}"
-    echo -e "  ${GREEN}serve -h${NC}                  ${YELLOW}Display the help information.${NC}"
-    echo -e "  ${GREEN}serve -p 8080${NC}             ${YELLOW}Set the port to 8080.${NC}"
-    echo -e "  ${GREEN}serve -d /path/to/dir${NC}     ${YELLOW}Set the working directory.${NC}"
-    echo -e "  ${GREEN}serve -g${NC}                  ${YELLOW}Open GitHub Repository.${NC}"
-    echo -e "  ${GREEN}serve -R script.php${NC}       ${YELLOW}Run the script.php PHP file.${NC}"
+    echo -e "  ${GREEN}serve --help${NC}                ${YELLOW}Display the help information.${NC}"
+    echo -e "  ${GREEN}serve --port 8080${NC}           ${YELLOW}Set the port to 8080.${NC}"
+    echo -e "  ${GREEN}serve --dir /path/to/dir${NC}    ${YELLOW}Set the working directory.${NC}"
+    echo -e "  ${GREEN}serve --github${NC}              ${YELLOW}Open the GitHub repository.${NC}"
+    echo -e "  ${GREEN}serve --run script.php${NC}      ${YELLOW}Run the script.php PHP file.${NC}"
     echo ""
     echo -e "${CYAN}==============================================${NC}"
-    echo -e "${MAGENTA}               ${GREEN}End of Guide${NC}             ${MAGENTA}"
+    echo -e "${MAGENTA}             ${GREEN}End of Guide${NC}             ${MAGENTA}"
     echo -e "${CYAN}==============================================${NC}"
 }
 
@@ -757,8 +757,19 @@ while [ "$1" != "" ]; do
   case $1 in
     -h | --help)
       show_help
-           install=false
+       install=false
 
+      exit 0
+      ;;
+-v | --version)
+      showversion=true
+      show_logo=false
+      phpmyadmin=false
+  echo -e "\n"
+echo -e "${GREEN}PhantomPHP - Installed Version 1.0${NC}"
+echo -e "${YELLOW}-----------------------------------------${NC}"
+echo -e "${BLUE}Version Check: ${NC}1.0"
+echo -e "${YELLOW}-----------------------------------------${NC}"
       exit 0
       ;;
     -s | --serve)
@@ -787,7 +798,7 @@ while [ "$1" != "" ]; do
            install=false
 
       ;;
-    -d | --directory)
+    -d | --dir
       shift
       directory=$1
       if [ ! -d "$directory" ]; then
@@ -845,7 +856,7 @@ if [ "$show_logo" = true ]; then
      ██     ██████████     ██
     ██      ██████████      ██
      ██     ██████████     ██
-       ▀█▄    ▀████▀    ▄█▀
+       ▀█▄    ▀████▀    ▄█▀u
           ▀▀▀▄▄▄▄▄▄▄▀▀▀
 
          PhantomPHP Server
@@ -855,7 +866,6 @@ if [ "$show_logo" = true ]; then
     ${NC}"
     echo -e "\n"
 fi
-
 
 display_server_info() {
     printf "\n\n"
@@ -908,6 +918,8 @@ if [ "$phpmyadmin" = "true" ]; then
     port_frowarding
   elif [ "$install" = "true" ]; then
     install_server
+  elif [ "$showversion" = "true" ]; then
+    Version
 fi
 
 wait

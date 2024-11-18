@@ -1,6 +1,6 @@
 {
 	"name": "dconco/phantom-php",
-	"description": "PhantomPHP is a PHP web server for Android, designed for use with the Acode app, enabling you to run and share PHP and MySQL applications from your device. It’s built to provide fast performance, high reliability, and easy integration with MySQL databases for powerful, dynamic web development.",
+	"description": "A PHP android web server for the Acode app, allowing you to serve your PHP applications both locally and share them online. It boasts fast performance and high reliability.",
 	"homepage": "https://github.com/codetesla51/phantom-php",
 	"type": "library",
 	"license": "MIT",

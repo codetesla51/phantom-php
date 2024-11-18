@@ -3,7 +3,7 @@
 	"name": "PhantomPHP",
 	"main": "dist/main.js",
 	"version": "1.0.0",
-	"readme": "./plugin.md",
+	"readme": "./readme.md",
 	"icon": "icon.png",
 	"files": [],
 	"minVersionCode": 290,

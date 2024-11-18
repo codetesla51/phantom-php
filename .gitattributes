@@ -1,0 +1,3 @@
+bin/phantom export-only
+composer.json export-only
+README.md export-only

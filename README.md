@@ -66,10 +66,10 @@ To install PhantomPHP on your Android device, you’ll need the following prereq
    - Open Termux, copy and paste the following commands. This will automatically start all installations and configurations for you:
 
     ```bash
-    pkg update && pkg upgrade
-    git clone https://github.com/codetesla51/phantom-php
-    cd phantom-php
-    bash phantom --install
+    composer global require dconco/phantom-php
+    echo export PATH="$PATH:~/.composer/vendor/bin" >> ~/.profile
+    # checks phantom is installed 
+    phantom -v 
     ```
    
    After running this, everything will be ready and set. You can start building!

@@ -118,7 +118,7 @@ This is the basic way to serve your PHP project. It will run a local server with
 
 **example:**
 ```bash
-cd your-project-directory
+cd /path/to/your-project-directory
 phantom --serve
 ```
 ---

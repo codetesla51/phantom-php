@@ -171,136 +171,146 @@ validate_port() {
 #}
 
 install_server() {
+  set -e
   show_loader
   log "${BLUE}" "Checking Dependencies..."
-    sleep 2
+  sleep 2
 
-    log "${BLUE}" "\nChecking if PHP is installed..."
-        sleep 1
+  log "${BLUE}" "\nChecking if PHP is installed..."
+  sleep 1
 
-    if command -v php >/dev/null 2>&1; then
-        log "${GREEN}" "PHP is installed\n"
-    else
-        log "${RED}" "PHP is not installed"
-        read -p "Do you want to install PHP? (y/n): " choice
-        if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
-            log "${YELLOW}" "Installing PHP..."
-            pkg install php -y 
-            until command -v php >/dev/null 2>&1; do
-                sleep 2 
-            done
-            log "${GREEN}" "PHP installed successfully!\n"
-        fi
+  if command -v php >/dev/null 2>&1; then
+    log "${GREEN}" "PHP is installed\n"
+  else
+    log "${RED}" "PHP is not installed"
+    read -p "Do you want to install PHP? (y/n): " choice
+    if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+      log "${YELLOW}" "Installing PHP..."
+      apt install php -y
+      until command -v php >/dev/null 2>&1; do
+        sleep 2
+      done
+      log "${GREEN}" "PHP installed successfully!\n"
     fi
-    sleep 2
+  fi
+  sleep 2
 
-    log "${BLUE}" "Checking if MySQL is installed..."
-        sleep 1
+  log "${BLUE}" "Checking if MySQL is installed..."
+  sleep 1
 
-    if command -v mysql >/dev/null 2>&1; then
-        log "${GREEN}" "MySQL is installed\n"
-    else
-        log "${RED}" "MySQL is not installed"
-        read -p "Do you want to install MySQL? (y/n): " choice
-        if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
-            log "${YELLOW}" "Installing MySQL..."
-            pkg install phpmyadmin 
-            until command -v mysql >/dev/null 2>&1; do
-                sleep 2
-            done
-            log "${GREEN}" "MySQL installed successfully!\n"
-        fi
+  if command -v mysql >/dev/null 2>&1; then
+    log "${GREEN}" "MySQL is installed\n"
+  else
+    log "${RED}" "MySQL is not installed"
+    read -p "Do you want to install MySQL? (y/n): " choice
+    if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+      log "${YELLOW}" "Installing MySQL..."
+      apt install phpmyadmin
+      until command -v mysql >/dev/null 2>&1; do
+        sleep 2
+      done
+      log "${GREEN}" "MySQL installed successfully!\n"
     fi
-    sleep 2
+  fi
+  sleep 2
 
-    log "${BLUE}" "Checking if MariaDB is installed..."
-        sleep 1
+  log "${BLUE}" "Checking if MariaDB is installed..."
+  sleep 1
 
-    if command -v mariadb >/dev/null 2>&1; then
-        log "${GREEN}" "MariaDB is installed\n"
-    else
-        log "${RED}" "MariaDB is not installed"
-        read -p "Do you want to install MariaDB? (y/n): " choice
-        if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
-            log "${YELLOW}" "Installing MariaDB..."
-            pkg install mariadb -y 
-            until command -v mariadb >/dev/null 2>&1; do
-                sleep 2
-            done
-            log "${GREEN}" "MariaDB installed successfully!\n"
-        fi
+  if command -v mariadb >/dev/null 2>&1; then
+    log "${GREEN}" "MariaDB is installed\n"
+  else
+    log "${RED}" "MariaDB is not installed"
+    read -p "Do you want to install MariaDB? (y/n): " choice
+    if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+      log "${YELLOW}" "Installing MariaDB..."
+      apt install mariadb -y
+      until command -v mariadb >/dev/null 2>&1; do
+        sleep 2
+      done
+      log "${GREEN}" "MariaDB installed successfully!\n"
     fi
+  fi
 
-    log "${GREEN}" "Everything is installed. All set for Phantom-PHP!\n"
-    sleep 1
+  log "${BLUE}" "Checking if Composer is installed..."
+  sleep 1
 
-    log "${YELLOW}" "Installing Phantom-PHP...\n"
-  show_loader
-    sleep 1
-
-    log "${BLUE}" "Initializing 'phantom' command...\n"
-    sleep 2
-   if [[ -f "phantom" ]]; then
-    log "${YELLOW}" "Moving 'phantom' file to ~/bin/..."
-    mv phantom ~/bin/
-
-    if [[ -f ~/bin/phantom ]]; then
-        if [[ ! -x ~/bin/phantom ]]; then
-            log "${YELLOW}" "Making 'phantom' executable..."
-            chmod +x ~/bin/phantom
-
-            if [[ -x ~/bin/phantom ]]; then
-                log "${GREEN}" "'phantom' file is now executable."
-            else
-                log "${RED}" "Error: Failed to set executable permissions on 'phantom'."
-                return
-            fi
-        else
-            log "${GREEN}" "'phantom' file is already executable."
-        fi
-        if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc ~/.zshrc 2>/dev/null; then
-    echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
-    echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc
-    log "${YELLOW}" "Updating PATH in ~/.bashrc and ~/.zshrc..."
-    source ~/.bashrc 2>/dev/null
-    source ~/.zshrc 2>/dev/null
-fi
-
-        log "${YELLOW}" "Sourcing ~/.bashrc..."
-        source ~/.bashrc
-        log "${GREEN}" "'phantom' command setup done. Phantom-PHP installed successfully.\n"
-         
+  if command -v composer >/dev/null 2>&1; then
+    log "${GREEN}" "Composer is installed\n"
+  else
+    log "${RED}" "Composer is not installed"
+    read -p "Do you want to install Composer? (y/n): " choice
+    if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+      log "${YELLOW}" "Downloading Composer installer..."
+      php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+      log "${BLUE}" "Verifying Composer installer..."
+      php -r "if (hash_file('sha384', 'composer-setup.php') === 'dac665fdc30fdd8ec78b38b9800061b4150413ff2e3b6f88543c636f7cd84f6db9189d43a81e5503cda447da73c7e5b6') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
       
-    else
-        log "${RED}" "Error: Failed to move 'phantom' to ~/bin/."
+      if [ $? -eq 0 ]; then
+        log "${GREEN}" "Composer installer verified."
+        php composer-setup.php
+        php -r "unlink('composer-setup.php');"
+        
+        until command -v composer >/dev/null 2>&1; do
+          sleep 2
+        done
+        
+        mkdir -p "$HOME/bin"
+        
+        log "${YELLOW}" "Moving composer.phar to $HOME/bin..."
+        mv composer.phar "$HOME/bin/composer"
+        chmod +x "$HOME/bin/composer"
+        
+        if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
+          log "${YELLOW}" "Adding $HOME/bin to PATH..."
+          echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+          source "$HOME/.bashrc"
+        fi
+        
+        log "${GREEN}" "Composer installed successfully and moved to $HOME/bin!\n"
+      else
+        log "${RED}" "Composer installer verification failed."
+        exit 1
+      fi
     fi
-else
-    log "${RED}" "Error: 'phantom' file not found. Please clone the repository again."
-fi
-    echo -e "\n"
-    echo -e "${GREEN}Starting phpMyAdmin server...${NC}"
-    cd || exit
+  fi
+  sleep 2
 
-    mysql_install_db &> /dev/null
-    mariadbd-safe -u root &> /dev/null &
 
-    if cd ../usr/share/phpmyadmin &> /dev/null; then
-        echo -e "${GREEN}Navigated to phpMyAdmin directory${NC}"
-    else
-        echo -e "${RED}phpMyAdmin directory not found!${NC}"
-        return 1
-    fi
+  log "${GREEN}" "Everything is installed. All set for Phantom-PHP!\n"
+  sleep 1
 
-    if [ -f "config.inc.php" ]; then
-        echo -e "${YELLOW}config.inc.php file found. Removing old file...${NC}"
-        rm config.inc.php &> /dev/null
-    else
-        echo -e "${YELLOW}No config file found. Creating a new one...${NC}"
-    fi
+  log "${YELLOW}" "Installing Phantom-PHP...\n"
+  show_loader
+  sleep 1
 
-    echo -e "${BLUE}Creating config.inc.php file...${NC}"
-    
-    cat <<EOF > config.inc.php &> /dev/null
+  log "${BLUE}" "Initializing phpMyAdmin server...\n"
+  sleep 2
+
+  echo -e "\n"
+  echo -e "${GREEN}Starting phpMyAdmin server...${NC}"
+  cd || exit
+
+  mysql_install_db &> /dev/null
+  mariadbd-safe -u root &> /dev/null &
+
+  if cd ../usr/share/phpmyadmin &> /dev/null; then
+    echo -e "${GREEN}Navigated to phpMyAdmin directory${NC}"
+  else
+    echo -e "${RED}phpMyAdmin directory not found!${NC}"
+    return 1
+  fi
+
+  if [ -f "config.inc.php" ]; then
+    echo -e "${YELLOW}config.inc.php file found. Removing old file...${NC}"
+    rm config.inc.php &> /dev/null
+  else
+    echo -e "${YELLOW}No config file found. Creating a new one...${NC}"
+  fi
+
+  echo -e "${BLUE}Creating config.inc.php file...${NC}"
+
+  cat <<EOF > config.inc.php &> /dev/null
 <?php
 /**
  * phpMyAdmin sample configuration, you can use it as base for
@@ -378,13 +388,12 @@ declare(strict_types=1);
 
 EOF
 
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}phpMyAdmin setup completed!${NC}"
-    else
-        echo -e "${RED}Failed to create config.inc.php file.${NC}"
-    fi
+  if [ $? -eq 0 ]; then
+    echo -e "${GREEN}phpMyAdmin setup completed!${NC}"
+  else
+    echo -e "${RED}Failed to create config.inc.php file.${NC}"
+  fi
 }
-
 
 #port port_frowarding function for forwarding local host 🤦
 #we used serveo

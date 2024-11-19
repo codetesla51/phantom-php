@@ -48,11 +48,29 @@ To install PhantomPHP on your Android device, you’ll need the following prereq
 
 ### Installation Requirements
 
-- **Termux**: A Linux terminal emulator for Android, available on [F-Droid](https://f-droid.org) and [GitHub](https://github.com/termux/termux-app/releases).
-- **Acode**: A code editor for Android, available on the [Google Play Store](https://play.google.com/store).
-- **PHP (version 7.4 or above)**: Installable within Termux.
-- **MariaDB**: For database support.
-- **phpMyAdmin**: A web-based database management tool.
+1. **Termux**:  
+   A powerful Linux terminal emulator for Android, available on [F-Droid](https://f-droid.org) and [GitHub](https://github.com/termux/termux-app/releases).  
+   This will allow you to run a Linux environment on your Android device.
+
+2. **Acode**:  
+   A code editor for Android, available on the [Google Play Store](https://play.google.com/store).  
+   Ideal for editing and writing your code directly on your Android device.
+
+3. **PHP (version 7.4 or above)**:  
+   Installable via Termux.  
+   PHP is required for running server-side scripts and applications.
+
+4. **Composer**:  
+   A PHP package manager used for handling dependencies and libraries in PHP projects.  
+   You can install Composer in Termux to manage PHP packages.
+
+5. **MariaDB**:  
+   A popular open-source database management system, forked from MySQL.  
+   Required for managing databases in your projects.
+
+6. **phpMyAdmin**:  
+   A web-based tool for managing MySQL and MariaDB databases.  
+   It provides an easy-to-use interface for database administration.
 
 ### Installation Steps
 
@@ -68,8 +86,8 @@ To install PhantomPHP on your Android device, you’ll need the following prereq
     ```bash
     composer global require dconco/phantom-php
     echo export PATH="$PATH:~/.composer/vendor/bin" >> ~/.profile
-    # checks phantom is installed 
-    phantom -v 
+    phantom --install
+    phantom -v
     ```
    
    After running this, everything will be ready and set. You can start building!
@@ -82,24 +100,15 @@ To install PhantomPHP on your Android device, you’ll need the following prereq
     ```
 
 Now, you should be able to access phpMyAdmin through your browser by navigating to `http://localhost:<port>`.
-
-
-### Setting Up `phantom` Command Globally
-
-If you have already followed the installation steps above, you can skip this section. Otherwise, to enable the `serve` command globally, type these commands. It also checks if dependencies are installed before setting up the `serve` command:
-
-```bash
-cd phantom-php
-phantom --install
-```
+ 
 ### Testing
-To test, navigate to your project directory and run the serve command:
-```bash
-cd your-project-directory
-phantom -v 
-```
 
-#### This will start the PHP at default port 8000 server, and you will be redirected to Chrome (or your default browser). You should see a temporary index.html page displaying the files in the project directory.
+To test your setup, navigate to your project directory and run the following command:
+
+```bash
+cd /path/to/your-project-directory
+phantom -v
+```
 ---
 ### Usage
 **Basic Usage Outline for PhantomPHP Server**
@@ -127,7 +136,7 @@ To start both MySQL and phpMyAdmin for database interaction, you can specify a c
 
 **example**
 ```bash
-phantom --D 8880
+phantom --db 8880
 ```
 ---
 ### Port Forwarding
@@ -135,7 +144,8 @@ Want to share your work with your team or friends? PhantomPHP allows you to forw
 
 **example**
 ```bash
-phantom -serve 8080 -f
+phantom -serve 8080 -f 
+#or use --forward
 ```
 #### This will run the local server on port 8080 and forward the port for others to access.
 ---
@@ -161,7 +171,7 @@ If you're still having trouble, you can contact the repository owner or contribu
 
 For additional command options, you can view the help menu with:
 ```bash
-phantom -help
+phantom --help
 ```
 ---
 ## Contributing

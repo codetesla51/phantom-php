@@ -1,5 +1,3 @@
-* export-ignore
-
-!bin/phantom
-!composer.json
-!README.md
+bin/phantom export-only
+composer.json export-only
+README.md export export-only

@@ -1,5 +1,5 @@
-* export-ignore
+phantom export
+composer.json export
+README.md export
 
-phantom -export-ignore
-composer.json -export-ignore
-README.md -export-ignore
+* export-ignore

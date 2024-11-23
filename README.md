@@ -117,7 +117,6 @@ Now, you should be able to access phpMyAdmin through your browser by navigating 
 To test your setup, navigate to your project directory and run the following command:
 
 ```bash
-cd /path/to/your-project-directory
 phantom -v
 ```
 ---

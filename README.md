@@ -80,8 +80,21 @@ To install PhantomPHP on your Android device, you’ll need the following prereq
 2. **Install Acode**:
    - Download and install Acode from the [Google Play Store](https://play.google.com/store).
 
-3. **Run Auto Installation Command**:
-   - Open Termux, copy and paste the following commands. This will automatically start all installations and configurations for you:
+3. **Install Composer**:
+   - Open Termux and run the following commands to install Composer:
+
+    ```bash
+    pkg update
+    pkg upgrade
+    pkg install php
+    pkg install curl
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/data/data/com.termux/files/usr/bin --filename=composer
+    ```
+
+   This will install **Composer** globally in Termux.
+
+4. **Run Auto Installation Command**:
+   - Once **Composer** is installed, copy and paste the following commands to automatically install and configure the required dependencies:
 
     ```bash
     composer global require dconco/phantom-php
@@ -89,11 +102,9 @@ To install PhantomPHP on your Android device, you’ll need the following prereq
     phantom --install
     phantom -v
     ```
-   
-   After running this, everything will be ready and set. You can start building!
 
-4. **Access phpMyAdmin**:
-    - Use the `phantom` command to start the PHP server for phpMyAdmin access. Replace `<port>` with the desired port number (e.g., 8080):
+5. **Access phpMyAdmin**:
+   - Use the `phantom` command to start the PHP server for phpMyAdmin access. Replace `<port>` with the desired port number (e.g., 8080):
 
     ```bash
     phantom --db <port>
